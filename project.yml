@@ -1,0 +1,34 @@
+name: SoundCloudApp
+options:
+  bundleIdPrefix: com.vanhai
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  SoundCloudApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - Sources
+    settings:
+      base:
+        PRODUCT_NAME: "SoundCloud VH"
+        PRODUCT_BUNDLE_IDENTIFIER: com.vanhai.soundcloudapp
+        INFOPLIST_KEY_CFBundleDisplayName: "SoundCloud VH"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_BITCODE: NO
+        SWIFT_VERSION: "5.0"
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: "SoundCloud VH"
+        UILaunchScreen: {}
+        UIBackgroundModes:
+          - audio
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundCloud By VanHai</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-wrapper">
+    <!-- Header Pastel Clean -->
+    <div class="header">
+      <div class="title-group">
+        <div class="header-tag">VH</div>
+        <div>
+          <h3>SoundCloud By VanHai</h3>
+          <span class="subtitle">Quản lý mốc thời gian chuyển bài</span>
+        </div>
+      </div>
+      <span class="badge" id="cue-count-badge">0 bài</span>
+    </div>
+
+    <!-- Hướng dẫn nhanh -->
+    <div class="quick-guide">
+      <p>Make by  <strong> Văn Hải </strong> version 4. <strong> Antigravity vip</strong> tạo ra với mục đích tua bài gét mấy thg ngu up nhạc dạo như buồi</p>
+    </div>
+
+    <!-- Các nút Xuất / Nhập file ra ngoài máy tính -->
+    <div class="io-actions">
+      <button id="export-json-btn" class="io-btn export-btn" title="Xuất danh sách ra file .json lưu vào máy tính">
+        Xuất file (.json)
+      </button>
+      <button id="import-json-btn" class="io-btn import-btn" title="Nhập danh sách từ file .json vào tiện ích">
+        Nhập file (.json)
+      </button>
+      <input type="file" id="import-file-input" accept=".json" style="display: none;">
+    </div>
+
+    <!-- Danh sách các bài đã lưu -->
+    <div class="cue-list-header">
+      <span>DANH SÁCH BÀI ĐÃ LƯU</span>
+      <button id="clear-all-btn" title="Xóa toàn bộ danh sách">Xóa tất cả</button>
+    </div>
+    
+    <div class="cue-list-container" id="cue-list">
+      <div class="empty-state">
+        <p>Chưa có bài nào được lưu.<br>Hãy mở SoundCloud và lưu mốc phát cho bài hát.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>Tự động tua & chuyển bài</span>
+    </div>
+  </div>
+
+  <script src="../ios_bridge.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

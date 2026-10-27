@@ -1,0 +1,363 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 350px;
+  max-height: 540px;
+  background: #fff8f9;
+  color: #4a3b40;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  user-select: none;
+}
+
+.popup-wrapper {
+  padding: 16px;
+}
+
+/* Header Pastel Clean */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-tag {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #ff758f 0%, #ff4d6d 100%);
+  color: #ffffff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 4px 10px rgba(255, 77, 109, 0.25);
+  letter-spacing: 0.5px;
+}
+
+.header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ff4d6d;
+}
+
+.subtitle {
+  font-size: 11px;
+  color: #9d8189;
+  font-weight: 500;
+}
+
+.badge {
+  font-size: 10px;
+  color: #ff4d6d;
+  background: #ffe5ec;
+  border: 1px solid #ffccd5;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+/* Quick Guide */
+.quick-guide {
+  background: #ffffff;
+  border: 1px solid #ffccd5;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: #5c4d52;
+  line-height: 1.4;
+  box-shadow: 0 2px 6px rgba(255, 182, 193, 0.12);
+}
+
+.quick-guide strong {
+  color: #ff4d6d;
+}
+
+/* IO Buttons */
+.io-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.io-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 8px;
+  border-radius: 10px;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-btn {
+  background: linear-gradient(135deg, #ff758f 0%, #ff4d6d 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(255, 77, 109, 0.25);
+}
+
+.export-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(255, 77, 109, 0.35);
+}
+
+.import-btn {
+  background: #ffffff;
+  color: #ff4d6d;
+  border: 1.5px solid #ffb3c1;
+}
+
+.import-btn:hover {
+  background: #ffe5ec;
+  border-color: #ff758f;
+  transform: translateY(-1px);
+}
+
+/* List Header */
+.cue-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #c9184a;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+#clear-all-btn {
+  background: none;
+  border: none;
+  color: #ba181b;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+#clear-all-btn:hover {
+  text-decoration: underline;
+}
+
+/* Container */
+.cue-list-container {
+  max-height: 250px;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1.5px solid #ffccd5;
+  padding: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(255, 182, 193, 0.1);
+}
+
+.cue-list-container::-webkit-scrollbar {
+  width: 5px;
+}
+.cue-list-container::-webkit-scrollbar-thumb {
+  background: #ffb3c1;
+  border-radius: 5px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #a38c92;
+  font-size: 11px;
+  padding: 24px 10px;
+  line-height: 1.5;
+}
+
+/* Cue Item Card */
+.cue-item {
+  background: #fff5f7;
+  border: 1px solid #ffe5ec;
+  border-radius: 10px;
+  padding: 9px 10px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.cue-item:hover {
+  background: #ffeef2;
+  border-color: #ffccd5;
+}
+
+.cue-item:last-child {
+  margin-bottom: 0;
+}
+
+.cue-item-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 8px;
+}
+
+.cue-item-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4a3b40;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.cue-item-points {
+  font-size: 10px;
+  color: #7a6068;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cue-point-tag {
+  color: #ff4d6d;
+  font-weight: 800;
+  background: #ffe5ec;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid #ffccd5;
+}
+
+/* Actions per item */
+.cue-item-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.action-btn-sm {
+  border: none;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-cue-btn {
+  background: #ffe5ec;
+  color: #ff4d6d;
+  border: 1px solid #ffccd5;
+}
+
+.edit-cue-btn:hover {
+  background: #ff4d6d;
+  color: #ffffff;
+  border-color: #ff4d6d;
+}
+
+.delete-cue-btn {
+  background: #ffffff;
+  color: #ba181b;
+  border: 1px solid #ffccd5;
+}
+
+.delete-cue-btn:hover {
+  background: #ba181b;
+  color: #ffffff;
+  border-color: #ba181b;
+}
+
+/* INLINE EDIT MODE */
+.cue-item.editing {
+  background: #ffeef2;
+  border: 1.5px solid #ff758f;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.edit-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.edit-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.edit-group label {
+  font-size: 9px;
+  color: #7a6068;
+  font-weight: 700;
+}
+
+.edit-input {
+  background: #ffffff;
+  border: 2px solid #ff758f;
+  color: #c9184a;
+  font-weight: 800;
+  padding: 5px;
+  border-radius: 6px;
+  font-size: 11px;
+  text-align: center;
+  outline: none;
+  box-shadow: inset 0 1px 3px rgba(255, 117, 143, 0.15);
+}
+
+.edit-input:focus {
+  border-color: #ff4d6d;
+  box-shadow: 0 0 0 2px rgba(255, 77, 109, 0.25);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.save-edit-btn {
+  background: linear-gradient(135deg, #ff758f 0%, #ff4d6d 100%);
+  color: #ffffff;
+  border: none;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-edit-btn {
+  background: #ffffff;
+  color: #7a6068;
+  border: 1px solid #ffccd5;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  font-size: 10px;
+  color: #b09a9e;
+  font-weight: 500;
+}

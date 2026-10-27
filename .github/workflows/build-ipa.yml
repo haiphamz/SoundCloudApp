@@ -1,0 +1,44 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build_ipa:
+    runs-on: macos-latest
+
+    steps:
+    - name: 1. Tải code về máy ảo Mac
+      uses: actions/checkout@v4
+
+    - name: 2. Tạo dự án Xcode tự động bằng XcodeGen
+      run: |
+        brew install xcodegen || true
+        xcodegen generate
+
+    - name: 3. Biên dịch ứng dụng (Archive)
+      run: |
+        xcodebuild clean archive \
+          -project SoundCloudApp.xcodeproj \
+          -scheme SoundCloudApp \
+          -configuration Release \
+          -archivePath $RUNNER_TEMP/SoundCloudApp.xcarchive \
+          -sdk iphoneos \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: 4. Đóng gói thành file .ipa
+      run: |
+        mkdir -p $RUNNER_TEMP/Payload
+        cp -r $RUNNER_TEMP/SoundCloudApp.xcarchive/Products/Applications/*.app $RUNNER_TEMP/Payload/
+        cd $RUNNER_TEMP
+        zip -r SoundCloudVH.ipa Payload
+
+    - name: 5. Xuất file .ipa để tải về
+      uses: actions/upload-artifact@v4
+      with:
+        name: SoundCloudVH-IPA
+        path: ${{ runner.temp }}/SoundCloudVH.ipa
