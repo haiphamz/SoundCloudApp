@@ -1,18 +1,22 @@
 import Foundation
 import WebKit
 
-class WebViewManager: ObservableObject {
+class WebViewManager: NSObject, ObservableObject, WKScriptMessageHandler {
     static let shared = WebViewManager()
 
-    let webView: WKWebView
+    var webView: WKWebView!
 
-    init() {
+    override init() {
+        super.init()
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
 
         let userContentController = WKUserContentController()
+
+        // Handler nativeStorage để đồng bộ dữ liệu vào UserDefaults
+        userContentController.add(LeakAvoider(delegate: self), name: "nativeStorage")
 
         // 1. Initial Storage Sync script
         if let saved = UserDefaults.standard.string(forKey: "sc_cue_storage"), !saved.isEmpty {
@@ -56,6 +60,13 @@ class WebViewManager: ObservableObject {
         self.webView = WKWebView(frame: .zero, configuration: config)
     }
 
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "nativeStorage", let jsonString = message.body as? String {
+            UserDefaults.standard.set(jsonString, forKey: "sc_cue_storage")
+            print("[SoundCloudApp] Storage saved to UserDefaults: \(jsonString.prefix(50))...")
+        }
+    }
+
     static func findResource(name: String, ext: String) -> URL? {
         if let url = Bundle.main.url(forResource: name, withExtension: ext, subdirectory: "WebResources") {
             return url
@@ -71,8 +82,21 @@ class WebViewManager: ObservableObject {
             let escaped = saved.replacingOccurrences(of: "\\", with: "\\\\")
                                .replacingOccurrences(of: "'", with: "\\'")
                                .replacingOccurrences(of: "\n", with: "")
-            let js = "try { localStorage.setItem('sc_cue_storage', '\(escaped)'); window.dispatchEvent(new Event('storage')); } catch(e){}"
+            let js = "try { localStorage.setItem('sc_cue_storage', '\(escaped)'); window.dispatchEvent(new Event('storage')); if (window.chrome && window.chrome.storage && window.chrome.storage.local) { window.chrome.storage.local.get(['track_cues'], () => {}); } } catch(e){}"
             webView.evaluateJavaScript(js, completionHandler: nil)
         }
+    }
+}
+
+class LeakAvoider: NSObject, WKScriptMessageHandler {
+    weak var delegate: WKScriptMessageHandler?
+
+    init(delegate: WKScriptMessageHandler) {
+        self.delegate = delegate
+        super.init()
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        delegate?.userContentController(userContentController, didReceive: message)
     }
 }

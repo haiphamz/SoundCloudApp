@@ -202,7 +202,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 2. NHẬP FILE JSON TỪ MÁY TÍNH
+  function processImportedData(incomingTracks) {
+    if (typeof incomingTracks !== 'object' || incomingTracks === null) {
+      alert('Lỗi: File hoặc đoạn mã JSON không đúng định dạng!');
+      return;
+    }
+    chrome.storage.local.get(['track_cues'], (res) => {
+      const current = res.track_cues || {};
+      let count = 0;
+      Object.keys(incomingTracks).forEach((k) => {
+        const item = incomingTracks[k];
+        if (item && item.title) {
+          current[k] = item;
+          count++;
+        }
+      });
+      chrome.storage.local.set({ track_cues: current }, () => {
+        alert(`Đã nhập thành công ${count} mục bài hát vào danh sách!`);
+        renderList();
+      });
+    });
+  }
+
+  // 2. NHẬP FILE JSON TỪ MÁY TÍNH HOẶC IPHONE
   importBtn.addEventListener('click', () => {
     importFileInput.click();
   });
@@ -216,35 +238,51 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const parsed = JSON.parse(event.target.result);
         const incomingTracks = parsed.tracks || parsed;
-
-        if (typeof incomingTracks !== 'object' || incomingTracks === null) {
-          throw new Error('Định dạng file không hợp lệ.');
-        }
-
-        chrome.storage.local.get(['track_cues'], (res) => {
-          const current = res.track_cues || {};
-          let count = 0;
-
-          Object.keys(incomingTracks).forEach((k) => {
-            const item = incomingTracks[k];
-            if (item && item.title) {
-              current[k] = item;
-              count++;
-            }
-          });
-
-          chrome.storage.local.set({ track_cues: current }, () => {
-            alert(`Đã nhập thành công ${count} mục bài hát vào danh sách!`);
-            renderList();
-            importFileInput.value = '';
-          });
-        });
+        processImportedData(incomingTracks);
+        importFileInput.value = '';
       } catch (err) {
         alert('Lỗi: File JSON không đúng định dạng!');
       }
     };
     reader.readAsText(file);
   });
+
+  // 3. DÁN TRỰC TIẾP MÃ JSON (TIỆN LỢI TRÊN IPHONE)
+  const pasteBtn = document.getElementById('paste-json-btn');
+  const pasteModal = document.getElementById('paste-modal');
+  const pasteTextarea = document.getElementById('paste-json-textarea');
+  const confirmPasteBtn = document.getElementById('confirm-paste-btn');
+  const cancelPasteBtn = document.getElementById('cancel-paste-btn');
+
+  if (pasteBtn && pasteModal) {
+    pasteBtn.addEventListener('click', () => {
+      pasteModal.style.display = pasteModal.style.display === 'none' ? 'block' : 'none';
+      if (pasteModal.style.display === 'block') {
+        pasteTextarea.focus();
+      }
+    });
+
+    cancelPasteBtn.addEventListener('click', () => {
+      pasteModal.style.display = 'none';
+    });
+
+    confirmPasteBtn.addEventListener('click', () => {
+      const val = pasteTextarea.value.trim();
+      if (!val) {
+        alert('Vui lòng dán nội dung JSON vào ô!');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(val);
+        const incomingTracks = parsed.tracks || parsed;
+        processImportedData(incomingTracks);
+        pasteTextarea.value = '';
+        pasteModal.style.display = 'none';
+      } catch(e) {
+        alert('Lỗi cú pháp JSON: ' + e.message);
+      }
+    });
+  }
 
   // Xóa toàn bộ
   clearAllBtn.addEventListener('click', () => {

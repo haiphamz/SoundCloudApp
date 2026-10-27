@@ -7,8 +7,8 @@ struct PopupSheetView: View {
     var body: some View {
         NavigationView {
             PopupWebView()
-                .navigationBarTitle("Cue Manager", displayMode: .inline)
-                .navigationBarItems(trailing: Button("Đóng") {
+                .navigationBarTitle("Quản lý Cue", displayMode: .inline)
+                .navigationBarItems(trailing: Button("Xong") {
                     WebViewManager.shared.syncStorageToWebView()
                     presentationMode.wrappedValue.dismiss()
                 })
@@ -37,13 +37,14 @@ struct PopupWebView: UIViewRepresentable {
             userContentController.addUserScript(script)
         }
 
-        userContentController.add(context.coordinator, name: "nativeStorage")
+        userContentController.add(LeakAvoider(delegate: context.coordinator), name: "nativeStorage")
         config.userContentController = userContentController
 
         let webView = WKWebView(frame: .zero, configuration: config)
+        webView.uiDelegate = context.coordinator
         context.coordinator.webView = webView
 
-        // Load popup.html
+        // Tìm và load popup.html
         var popupURL: URL? = nil
         if let url = Bundle.main.url(forResource: "popup", withExtension: "html", subdirectory: "WebResources/popup") {
             popupURL = url
@@ -54,8 +55,7 @@ struct PopupWebView: UIViewRepresentable {
         }
 
         if let url = popupURL {
-            let readAccessURL = url.deletingLastPathComponent().deletingLastPathComponent()
-            webView.loadFileURL(url, allowingReadAccessTo: readAccessURL)
+            webView.loadFileURL(url, allowingReadAccessTo: Bundle.main.bundleURL)
         }
 
         return webView
@@ -63,7 +63,7 @@ struct PopupWebView: UIViewRepresentable {
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 
-    class Coordinator: NSObject, WKScriptMessageHandler {
+    class Coordinator: NSObject, WKScriptMessageHandler, WKUIDelegate {
         weak var webView: WKWebView?
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -71,6 +71,41 @@ struct PopupWebView: UIViewRepresentable {
                 UserDefaults.standard.set(jsonString, forKey: "sc_cue_storage")
                 WebViewManager.shared.syncStorageToWebView()
             }
+        }
+
+        // Hiển thị hộp thoại alert() của JavaScript trên iOS
+        func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootVC = windowScene.windows.first?.rootViewController else {
+                completionHandler()
+                return
+            }
+            let alert = UIAlertController(title: "Thông báo", message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
+            
+            var presenter = rootVC
+            while let presented = presenter.presentedViewController {
+                presenter = presented
+            }
+            presenter.present(alert, animated: true)
+        }
+
+        // Hiển thị hộp thoại confirm() của JavaScript trên iOS
+        func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootVC = windowScene.windows.first?.rootViewController else {
+                completionHandler(false)
+                return
+            }
+            let alert = UIAlertController(title: "Xác nhận", message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Hủy", style: .cancel) { _ in completionHandler(false) })
+            alert.addAction(UIAlertAction(title: "Đồng ý", style: .destructive) { _ in completionHandler(true) })
+            
+            var presenter = rootVC
+            while let presented = presenter.presentedViewController {
+                presenter = presented
+            }
+            presenter.present(alert, animated: true)
         }
     }
 }

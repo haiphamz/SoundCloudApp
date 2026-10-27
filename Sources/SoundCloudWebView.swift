@@ -43,19 +43,12 @@ struct SoundCloudWebView: UIViewRepresentable {
         }
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+    class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         var parent: SoundCloudWebView
 
         init(_ parent: SoundCloudWebView) {
             self.parent = parent
             super.init()
-        }
-
-        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-            if message.name == "nativeStorage", let jsonString = message.body as? String {
-                UserDefaults.standard.set(jsonString, forKey: "sc_cue_storage")
-                print("[SoundCloudApp] Cue storage updated via bridge.")
-            }
         }
 
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
@@ -67,12 +60,12 @@ struct SoundCloudWebView: UIViewRepresentable {
             parent.canGoBack = webView.canGoBack
             parent.canGoForward = webView.canGoForward
 
-            // Sync latest cues from UserDefaults into page's localStorage
+            // Đồng bộ dữ liệu mốc phát từ UserDefaults vào trang SoundCloud
             if let saved = UserDefaults.standard.string(forKey: "sc_cue_storage"), !saved.isEmpty {
                 let escaped = saved.replacingOccurrences(of: "\\", with: "\\\\")
                                    .replacingOccurrences(of: "'", with: "\\'")
                                    .replacingOccurrences(of: "\n", with: "")
-                let js = "try { localStorage.setItem('sc_cue_storage', '\(escaped)'); } catch(e){}"
+                let js = "try { localStorage.setItem('sc_cue_storage', '\(escaped)'); window.dispatchEvent(new Event('storage')); } catch(e){}"
                 webView.evaluateJavaScript(js, completionHandler: nil)
             }
         }
@@ -81,6 +74,41 @@ struct SoundCloudWebView: UIViewRepresentable {
             parent.isLoading = false
             parent.canGoBack = webView.canGoBack
             parent.canGoForward = webView.canGoForward
+        }
+
+        // Hiển thị alert() trên giao diện iOS
+        func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootVC = windowScene.windows.first?.rootViewController else {
+                completionHandler()
+                return
+            }
+            let alert = UIAlertController(title: "SoundCloud VH", message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
+            
+            var presenter = rootVC
+            while let presented = presenter.presentedViewController {
+                presenter = presented
+            }
+            presenter.present(alert, animated: true)
+        }
+
+        // Hiển thị confirm() trên giao diện iOS
+        func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootVC = windowScene.windows.first?.rootViewController else {
+                completionHandler(false)
+                return
+            }
+            let alert = UIAlertController(title: "SoundCloud VH", message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Hủy", style: .cancel) { _ in completionHandler(false) })
+            alert.addAction(UIAlertAction(title: "Đồng ý", style: .destructive) { _ in completionHandler(true) })
+            
+            var presenter = rootVC
+            while let presented = presenter.presentedViewController {
+                presenter = presented
+            }
+            presenter.present(alert, animated: true)
         }
     }
 }

@@ -100,33 +100,40 @@
   }
 
   /**
-   * Lấy số giây đang phát hiện tại từ 4 nguồn khác nhau (100% chính xác)
+   * Lấy số giây đang phát hiện tại từ nhiều nguồn khác nhau (100% chính xác trên cả mobile và desktop)
    */
   function getCurrentPlaybackSeconds() {
-    // Nguồn 1: Thuộc tính aria-valuenow của thanh timeline SoundCloud
-    const progressEl = document.querySelector('.playbackTimeline [role="progressbar"], .playbackTimeline [aria-valuenow], [data-testid="playback-timeline"] [role="progressbar"]');
+    // Nguồn 1: window.__scActiveAudio hoặc window.__scLiveCurrentTime từ inject.js
+    if (window.__scActiveAudio && typeof window.__scActiveAudio.currentTime === 'number' && window.__scActiveAudio.currentTime > 0) {
+      return Math.floor(window.__scActiveAudio.currentTime);
+    }
+    if (typeof window.__scLiveCurrentTime === 'number' && window.__scLiveCurrentTime > 0) {
+      return Math.floor(window.__scLiveCurrentTime);
+    }
+    if (typeof liveAudioCurrentTime === 'number' && liveAudioCurrentTime > 0) {
+      return Math.floor(liveAudioCurrentTime);
+    }
+
+    // Nguồn 2: Mọi thẻ audio/video trong DOM
+    const allAudios = Array.from(document.querySelectorAll('audio, video')).filter(a => a.id !== 'sc-hot-deck2');
+    for (const a of allAudios) {
+      if (typeof a.currentTime === 'number' && a.currentTime > 0) {
+        return Math.floor(a.currentTime);
+      }
+    }
+
+    // Nguồn 3: Thuộc tính aria-valuenow của thanh timeline SoundCloud
+    const progressEl = document.querySelector('.playbackTimeline [role="progressbar"], .playbackTimeline [aria-valuenow], [data-testid="playback-timeline"] [role="progressbar"], [role="progressbar"]');
     if (progressEl && progressEl.getAttribute('aria-valuenow')) {
       const val = parseFloat(progressEl.getAttribute('aria-valuenow'));
       if (!isNaN(val) && val >= 0) return Math.floor(val);
     }
 
-    // Nguồn 2: Text hiển thị thời gian trên player bar
-    const timePassedEl = document.querySelector('.playbackTimeline__timePassed span[aria-hidden="true"], .playbackTimeline__timePassed');
+    // Nguồn 4: Text hiển thị thời gian trên player bar
+    const timePassedEl = document.querySelector('.playbackTimeline__timePassed span[aria-hidden="true"], .playbackTimeline__timePassed, [class*="timePassed"], [class*="time_passed"]');
     if (timePassedEl && timePassedEl.textContent) {
       const sec = parseTimeStringToSeconds(timePassedEl.textContent);
       if (sec > 0) return sec;
-    }
-
-    // Nguồn 3: Biến liveAudioCurrentTime bắt từ Audio Hook (inject.js)
-    if (liveAudioCurrentTime > 0) {
-      return Math.floor(liveAudioCurrentTime);
-    }
-
-    // Nguồn 4: Thẻ native audio trong DOM
-    const allAudios = Array.from(document.querySelectorAll('audio')).filter(a => a.id !== 'sc-hot-deck2');
-    const playing = allAudios.find(a => !a.paused && a.currentTime > 0) || allAudios[0];
-    if (playing && playing.currentTime > 0) {
-      return Math.floor(playing.currentTime);
     }
 
     return 0;
@@ -264,7 +271,9 @@
       }
     }
 
-    if (!title && !path) return null;
+    if (!title && !path) {
+      return { path: window.location.pathname || 'current-track', title: (document.title || 'Bài hát đang phát').split('|')[0].trim() };
+    }
     return { path: path || '', title: title || 'Bài hát đang phát' };
   }
 

@@ -49,21 +49,30 @@
     return originalOpen.apply(this, [method, url, ...rest]);
   };
 
-  // 3. Hook Audio constructor để theo dõi chính xác currentTime và tua bài
+  // 3. Hook Audio & MediaElement để theo dõi chính xác currentTime và tua bài
   function attachAudioTracker(audioEl) {
     if (!audioEl || audioEl.__scTrackerAttached) return;
     audioEl.__scTrackerAttached = true;
     window.__scActiveAudio = audioEl;
 
-    audioEl.addEventListener('timeupdate', () => {
-      window.postMessage({
-        type: 'SC_AUDIO_TIME_SYNC',
-        currentTime: audioEl.currentTime,
-        duration: audioEl.duration
-      }, '*');
-    });
+    const syncTime = () => {
+      if (typeof audioEl.currentTime === 'number') {
+        window.__scLiveCurrentTime = audioEl.currentTime;
+        window.__scLiveDuration = audioEl.duration || 0;
+        window.postMessage({
+          type: 'SC_AUDIO_TIME_SYNC',
+          currentTime: audioEl.currentTime,
+          duration: audioEl.duration
+        }, '*');
+      }
+    };
+
+    audioEl.addEventListener('timeupdate', syncTime);
+    audioEl.addEventListener('playing', syncTime);
+    audioEl.addEventListener('seeked', syncTime);
   }
 
+  // Hook new Audio()
   const origAudio = window.Audio;
   window.Audio = function (...args) {
     const a = new origAudio(...args);
@@ -71,21 +80,30 @@
     return a;
   };
 
+  // Hook document.createElement('audio')
   const origCreateElement = document.createElement;
   document.createElement = function (tagName, ...args) {
     const el = origCreateElement.apply(this, [tagName, ...args]);
-    if (tagName && typeof tagName === 'string' && tagName.toLowerCase() === 'audio') {
+    if (tagName && typeof tagName === 'string' && (tagName.toLowerCase() === 'audio' || tagName.toLowerCase() === 'video')) {
       attachAudioTracker(el);
     }
     return el;
   };
+
+  // Hook HTMLMediaElement.prototype.play (Bắt 100% audio instance khi bắt đầu phát trên iOS)
+  if (window.HTMLMediaElement && window.HTMLMediaElement.prototype) {
+    const origPlay = window.HTMLMediaElement.prototype.play;
+    window.HTMLMediaElement.prototype.play = function (...args) {
+      attachAudioTracker(this);
+      return origPlay.apply(this, args);
+    };
+  }
 
   // Lắng nghe lệnh TUA BÀI HÁT từ Content Script
   window.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SC_SEEK_TO_SECONDS') {
       const targetSec = event.data.targetSec;
       if (typeof targetSec === 'number') {
-        // Tua trên Audio instance
         if (window.__scActiveAudio) {
           try {
             window.__scActiveAudio.currentTime = targetSec;
@@ -96,10 +114,10 @@
     }
   });
 
-  // Quét định kỳ
+  // Quét định kỳ mọi thẻ audio
   setInterval(() => {
     try {
-      const audios = document.querySelectorAll('audio');
+      const audios = document.querySelectorAll('audio, video');
       audios.forEach(attachAudioTracker);
     } catch (e) {}
   }, 1000);
