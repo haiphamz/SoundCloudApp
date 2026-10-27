@@ -18,7 +18,8 @@ struct SoundCloudWebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
-        webView.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
+        // iOS Safari User Agent chuẩn để giao diện vừa khít màn hình điện thoại & Google OAuth cho phép đăng nhập
+        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1"
 
         if webView.url == nil {
             if let initialURL = URL(string: "https://soundcloud.com/discover") {
@@ -29,9 +30,7 @@ struct SoundCloudWebView: UIViewRepresentable {
         return webView
     }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {
-        // UI updates if needed
-    }
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
 
     private func setupAudioSession() {
         do {
@@ -45,6 +44,7 @@ struct SoundCloudWebView: UIViewRepresentable {
 
     class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         var parent: SoundCloudWebView
+        weak var activePopupNav: UINavigationController?
 
         init(_ parent: SoundCloudWebView) {
             self.parent = parent
@@ -74,6 +74,45 @@ struct SoundCloudWebView: UIViewRepresentable {
             parent.isLoading = false
             parent.canGoBack = webView.canGoBack
             parent.canGoForward = webView.canGoForward
+        }
+
+        // HỖ TRỢ POPUP ĐĂNG NHẬP GOOGLE / APPLE / FACEBOOK
+        func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootVC = windowScene.windows.first?.rootViewController else {
+                return nil
+            }
+            var topVC = rootVC
+            while let presented = topVC.presentedViewController {
+                topVC = presented
+            }
+
+            let popupWebView = WKWebView(frame: .zero, configuration: configuration)
+            popupWebView.uiDelegate = self
+            popupWebView.navigationDelegate = self
+            popupWebView.customUserAgent = webView.customUserAgent
+
+            let popupVC = UIViewController()
+            popupVC.view = popupWebView
+            popupVC.title = "Đăng nhập"
+
+            let nav = UINavigationController(rootViewController: popupVC)
+            popupVC.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Đóng", style: .done, target: self, action: #selector(closePopup))
+
+            self.activePopupNav = nav
+            topVC.present(nav, animated: true)
+
+            return popupWebView
+        }
+
+        func webViewDidClose(_ webView: WKWebView) {
+            activePopupNav?.dismiss(animated: true)
+            activePopupNav = nil
+        }
+
+        @objc func closePopup() {
+            activePopupNav?.dismiss(animated: true)
+            activePopupNav = nil
         }
 
         // Hiển thị alert() trên giao diện iOS
