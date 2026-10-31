@@ -18,8 +18,8 @@ struct SoundCloudWebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
-        // iOS Safari User Agent chuẩn để giao diện vừa khít màn hình điện thoại & Google OAuth cho phép đăng nhập
-        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1"
+        // Sử dụng macOS Safari User Agent để load giao diện desktop SoundCloud đầy đủ tính năng & không bị banner "Open in app"
+        webView.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
 
         if webView.url == nil {
             if let initialURL = URL(string: "https://soundcloud.com/discover") {
@@ -30,7 +30,9 @@ struct SoundCloudWebView: UIViewRepresentable {
         return webView
     }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        // UI updates if needed
+    }
 
     private func setupAudioSession() {
         do {
